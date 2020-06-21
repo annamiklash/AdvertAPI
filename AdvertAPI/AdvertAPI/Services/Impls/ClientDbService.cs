@@ -40,10 +40,11 @@ namespace AdvertAPI.Services
             var accessToken = TokensGenerator.GenerateAccessToken(clientId, _configuration);
             var refreshToken = TokensGenerator.GenerateRefreshToken(clientId, accessToken);
             SaveClient(request, clientId, hashedPassword, salt);
+            var refreshId = GetNewRefreshTokenId();
+            var accessId = GetNewAccessTokenId();
 
-            SaveAccessToken(accessToken, clientId);
-            SaveRefreshToken(refreshToken, clientId);
-
+            SaveAccessToken(accessToken, clientId, accessId);
+            SaveRefreshToken(refreshToken, clientId, refreshId);
             AssignTokensToClient(clientId, accessToken, refreshToken);
 
             return new NewClientResponse
@@ -52,6 +53,7 @@ namespace AdvertAPI.Services
                 RefreshToken = refreshToken.Token
             };
         }
+
 
         public RefreshTokenResponse RefreshToken(RefreshTokenRequest request)
         {
@@ -98,17 +100,7 @@ namespace AdvertAPI.Services
                 RefreshToken = updatedRefreshToken
             };
         }
-
-        private string GetSalt(int idClient)
-        {
-            return _context.Client.FirstOrDefault(client => client.IdClient == idClient).Salt;
-        }
-
-        private string GetHashedPassword(int idClient)
-        {
-            return _context.Client.FirstOrDefault(client => client.IdClient == idClient).Password;
-        }
-
+        
         public Client GetClientByLogin(string login)
         {
             return _context.Client.FirstOrDefault(client => client.Login == login);
@@ -122,6 +114,16 @@ namespace AdvertAPI.Services
         public bool ClientExists(int clientId)
         {
             return _context.Client.Any(client => client.IdClient == clientId);
+        }
+
+        private string GetSalt(int idClient)
+        {
+            return _context.Client.FirstOrDefault(client => client.IdClient == idClient).Salt;
+        }
+
+        private string GetHashedPassword(int idClient)
+        {
+            return _context.Client.FirstOrDefault(client => client.IdClient == idClient).Password;
         }
 
         private string UpdateRefreshToken(RefreshToken refreshToken)
@@ -185,11 +187,11 @@ namespace AdvertAPI.Services
             _context.SaveChanges();
         }
 
-        private void SaveAccessToken(AccessToken accessToken, int clientId)
+        private void SaveAccessToken(AccessToken accessToken, int clientId, int tokenId)
         {
             _context.AccessToken.Add(new AccessToken
             {
-                IdAccessToken = accessToken.IdAccessToken,
+                IdAccessToken = tokenId,
                 Token = accessToken.Token,
                 IssueDateTime = accessToken.IssueDateTime,
                 ExpirationDateTime = accessToken.ExpirationDateTime,
@@ -200,11 +202,17 @@ namespace AdvertAPI.Services
             _context.SaveChanges();
         }
 
-        private void SaveRefreshToken(RefreshToken refreshToken, int clientId)
+        private int GetNewAccessTokenId()
+        {
+            return _context.AccessToken.Max(token => token.IdAccessToken) + 1;
+        }
+
+
+        private void SaveRefreshToken(RefreshToken refreshToken, int clientId, int tokenId)
         {
             _context.RefreshTokens.Add(new RefreshToken
             {
-                IdRefreshToken = refreshToken.IdRefreshToken,
+                IdRefreshToken = tokenId,
                 Token = refreshToken.Token,
                 IssueDateTime = refreshToken.IssueDateTime,
                 IdClient = clientId,
@@ -212,6 +220,11 @@ namespace AdvertAPI.Services
             });
 
             _context.SaveChanges();
+        }
+
+        private int GetNewRefreshTokenId()
+        {
+            return _context.RefreshTokens.Max(token => token.IdRefreshToken) + 1;
         }
 
         private bool LoginExists(string requestLogin)

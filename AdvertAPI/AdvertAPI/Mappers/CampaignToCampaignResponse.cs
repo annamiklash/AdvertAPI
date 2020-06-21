@@ -5,9 +5,9 @@ namespace AdvertAPI.Mappers
 {
     public class CampaignToCampaignResponse
     {
-        public static CampaignResponse MapToCampaignResponse(Campaign campaign, Client client)
+        public static CampaignResponseWrapper MapToCampaignResponse(Campaign campaign, Client client)
         {
-            return new CampaignResponse
+            return new CampaignResponseWrapper
             {
                 CampaignId = campaign.IdCampaign,
                 StartDate = campaign.StartDate,

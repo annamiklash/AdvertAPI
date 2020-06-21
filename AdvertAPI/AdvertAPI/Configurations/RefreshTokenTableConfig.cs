@@ -24,10 +24,7 @@ namespace AdvertAPI.Configurations
             builder.Property(x => x.IssueDateTime)
                 .IsRequired()
                 .HasColumnType("date");
-
-            // builder.HasOne(x => x.Client)
-            //     .WithOne(x => x.RefreshToken)
-            //     .HasForeignKey<Client>(x => x.IdClient);
+            
         }
     }
 }

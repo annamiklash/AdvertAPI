@@ -11,7 +11,6 @@ namespace AdvertAPI.Controllers
     public class ClientsController : ControllerBase
     {
         private readonly IClientDbService _dbService;
-
         public ClientsController(IClientDbService service)
         {
             _dbService = service;
@@ -70,7 +69,7 @@ namespace AdvertAPI.Controllers
             {
                 return BadRequest(errorList);
             }
-
+            
             try
             {
                 var response = _dbService.AuthenticateClient(request);

@@ -125,7 +125,7 @@ namespace AdvertAPI.Helpers
         public static List<Error> ValidateNewCampaignRequest(NewCampaignRequest request)
         {
             List<Error> errors = new List<Error>();
-            
+
             if (!IsDateValid(request.StartDate))
             {
                 errors.Add(new Error
@@ -135,7 +135,7 @@ namespace AdvertAPI.Helpers
                     Message = "Date doesnt match regex ^([12]\\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$)"
                 });
             }
-                  
+
             if (!IsDateValid(request.EndDate))
             {
                 errors.Add(new Error
@@ -146,7 +146,25 @@ namespace AdvertAPI.Helpers
                 });
             }
 
+            if (IsDateValid(request.StartDate) && IsDateValid(request.EndDate))
+            {
+                if (!IsBefore(request.StartDate, request.EndDate))
+                {
+                    errors.Add(new Error
+                    {
+                        Field = "StartDate",
+                        InvalidValue = request.StartDate,
+                        Message = "StartDate should be BEFORE EndDate"
+                    });
+                }
+            }
+
             return errors;
+        }
+
+        private static bool IsBefore(string requestStartDate, string requestEndDate)
+        {
+            return DateTime.Parse(requestStartDate) < DateTime.Parse(requestEndDate);
         }
 
         public static bool IsPasswordValid(string enteredPassword, string hashedPassword, string salt)
@@ -166,6 +184,7 @@ namespace AdvertAPI.Helpers
         {
             return Regex.IsMatch(phone, PHONE_REGEX);
         }
+
         private static bool IsEmailValid(string emailAddress)
         {
             try
@@ -178,7 +197,7 @@ namespace AdvertAPI.Helpers
                 return false;
             }
         }
-        
+
         private static bool IsDateValid(string requestDateAccepted)
         {
             return Regex.IsMatch(requestDateAccepted, DATE_REGEX);

@@ -19,17 +19,18 @@ namespace AdvertAPI.Services
             _clientDb = clientDb;
         }
 
-        public List<CampaignResponse> GetAllCampaigns()
+        public CampaignsResponse GetAllCampaigns()
         {
             List<Client> clientList = _context.Client.ToList();
             List<Campaign> campaignsList = _context.Campaign.ToList();
             List<Banner> bannersList = _context.Banner.ToList();
-            List<CampaignResponse> campaignResponses = new List<CampaignResponse>();
+            List<CampaignResponseWrapper> campaignResponses = new List<CampaignResponseWrapper>();
 
             foreach (var campaign in campaignsList)
             {
                 var client = _clientDb.GetClientById(campaign.IdClient);
-                CampaignResponse campaignResponse = CampaignToCampaignResponse.MapToCampaignResponse(campaign,client);
+                CampaignResponseWrapper campaignsResponse =
+                    CampaignToCampaignResponse.MapToCampaignResponse(campaign, client);
                 List<BannerWrapper> bannerWrappers = new List<BannerWrapper>();
 
                 foreach (var banner in campaign.Banner)
@@ -37,10 +38,16 @@ namespace AdvertAPI.Services
                     BannerWrapper bannerWrapper = BannerToBannerWrapper.MapBannerToBannerWrapper(banner);
                     bannerWrappers.Add(bannerWrapper);
                 }
-                campaignResponse.Banners = bannerWrappers;
-                campaignResponses.Add(campaignResponse);
+
+                campaignsResponse.Banners = bannerWrappers;
+                campaignResponses.Add(campaignsResponse);
             }
-            return campaignResponses.OrderByDescending(response => response.StartDate).ToList();
+
+            campaignResponses = campaignResponses.OrderByDescending(response => response.StartDate).ToList();
+            return new CampaignsResponse
+            {
+                Campaigns = campaignResponses
+            };
         }
 
 
@@ -65,10 +72,6 @@ namespace AdvertAPI.Services
             return fromStreet.Equals(toStreet);
         }
 
-        private string GetStreet(int id)
-        {
-            return _context.Building.FirstOrDefault(building => building.IdBuilding == id).Street;
-        }
 
         public BestPriceWrapper GetBestPrice(NewCampaignRequest request)
         {
@@ -216,6 +219,11 @@ namespace AdvertAPI.Services
                     building.Street == street
                     && building.StreetNumber >= fromStreetNumber && building.StreetNumber <= toStreetNumber)
                 .ToList();
+        }
+
+        private string GetStreet(int id)
+        {
+            return _context.Building.FirstOrDefault(building => building.IdBuilding == id).Street;
         }
 
         private int GetStreetNumber(int idBuilding)
